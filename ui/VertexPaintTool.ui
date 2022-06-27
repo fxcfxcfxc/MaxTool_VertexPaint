@@ -72,13 +72,6 @@
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_6">
          <item>
-          <widget class="QCheckBox" name="checkBox_2">
-           <property name="text">
-            <string>链接绘画模式</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QPushButton" name="pushButton_7">
            <property name="text">
             <string>新建通道模式</string>

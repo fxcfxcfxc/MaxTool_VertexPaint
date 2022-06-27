@@ -33,7 +33,8 @@ class VertexPaintWindow(QDockWidget):
         self.create_widget()
         self.create_connect()
 
-        self.resize(500, 550)
+        self.resize(550, 650)
+
 
     def create_widget(self):
         self.button_addVertexPaint = self.ui.findChild(QPushButton,'pushButton')
@@ -76,6 +77,10 @@ class VertexPaintWindow(QDockWidget):
         self.button_setPaintMode = self.ui.findChild(QPushButton,"pushButton_3")
         self.button_setPaintMode_easer = self.ui.findChild(QPushButton, "pushButton_4")
 
+
+        self.button_addlayer = self.ui.findChild(QPushButton,"pushButton_8")
+        self.button_subtractlayer = self.ui.findChild(QPushButton, "pushButton_9")
+
     def create_connect(self):
         self.button_vertexFromDataTomodifty.clicked.connect(self.vertexFromDataTomodifty)
         self.button_addVertexPaint.clicked.connect(self.addVertexPaint)
@@ -89,23 +94,31 @@ class VertexPaintWindow(QDockWidget):
         self.button_setPaintMode.clicked.connect(self.set_PaintMode)
         self.button_setPaintMode_easer.clicked.connect(self.set_PaintMode_easer)
 
+        self.button_addlayer.clicked.connect(self.addlayer)
+        # self.button_subtractlayer.clicked.connect()
+
     def addVertexPaint(self):
         self.target_paint = rt.selection[0]
         self.Base = rt.PaintLayerMod()
-        self.R = rt.PaintLayerMod()
-        self.G = rt.PaintLayerMod()
-        self.B = rt.PaintLayerMod()
+        self.Base.name = "Base_RGB"
 
-        paintmodifer = [self.Base,self.R,self.G,self.B]
-        paintname = ["Base","R","G","B"]
+        rt.convertToMesh(self.target_paint)
+        # 返回顶点数组
+        numVer = rt.getNumVerts(self.target_paint)
+
+        rt.convertTopoly(self.target_paint)
+        # 添加修改器
+        rt.addModifier(self.target_paint, self.Base)
+        s = self.Base.AcquirePaintState(self.target_paint)
 
 
-        for x in range(4):
-            rt.addModifier(self.target_paint, paintmodifer[x])
-            paintmodifer[x].name = paintname[x]
+        #设置基础层每一个点颜色
+        for index in range(numVer):
+            s.SetVertColor(index+1, rt.point4(1, 0.5, 1, 1))
 
-            if(x!=0):
-                paintmodifer[x].layerMode = 'Subtract'
+
+        self.Base.ApplyPaintState(self.target_paint, s)
+
 
     def applayVertexPaint(self):
         rt.convertTopoly(rt.selection[0])
@@ -132,29 +145,36 @@ class VertexPaintWindow(QDockWidget):
     def vertexFromDataTomodifty(self):
         #获取场景对象
         target_obj = rt.selection[0]
-        print(target_obj)
-        #得到顶点序号,返回bitarray类型
-        numVertex = rt.polyop.getVertSelection(target_obj)
+        rt.convertToMesh(target_obj)
+
+        paintmodtest = rt.PaintLayerMod()
+        rt.addModifier(target_obj, paintmodtest)
+        rt.convertToMesh(target_obj)
+        target_obj = rt.selection[0]
+
+        #得到顶点数量
+        # numVertex = rt.polyop.getVertSelection(target_obj)
+        numVertex = rt.getNumCPVVerts(target_obj)
         print(numVertex)
 
         #存放所有顶点色
         colorarry = []
 
-        for x  in range(numVertex.count):
+        for x  in range(numVertex):
 
             # 选择当前点
-            target_obj.setSelection(1, rt.BitArray(x+1))
+            # target_obj.setSelection(1, rt.BitArray(x+1))
 
-            #0代表枚举类型 rgb
-            a = target_obj.GetVertexColor(0)
+            #得到定点色 返回 color类型
+            a = rt.getVertColor(target_obj,x+1)
 
             #将当前点的顶点色 加入数组
             colorarry.append(a)
 
         #将所有顶点的颜色 设置为1
 
-        target_obj.setSelection(1,numVertex)
-        target_obj.SetVertexColor(rt.color(255,255,255),0)
+        # target_obj.setSelection(1,numVertex)
+        # target_obj.SetVertexColor(rt.color(255,255,255),0)
 
         # 第一层基础修改器
         paintmod01 = rt.PaintLayerMod()
@@ -172,20 +192,24 @@ class VertexPaintWindow(QDockWidget):
         paintmod04 = rt.PaintLayerMod()
         paintmod04.name = 'B'
 
-
-
         #------------------第一层Normal设置---------------
+        # 将所有顶点的颜色 设置为1
         rt.addModifier(target_obj, paintmod01)
+        s = paintmod01.AcquirePaintState(target_obj)
+
+        for index in range(numVertex):
+            s.SetRawColor(index+1,rt.Color(255, 255, 255, 255))
+        paintmod01.ApplyPaintState(target_obj, s)
 
         #------------------R层设置------------------------
         #设置绘制状态为R层
         rt.addModifier(target_obj, paintmod02)
         s = paintmod02.AcquirePaintState(target_obj)
-        paintmod02.layerMode= 'Subtract'
-        #将原来的 R通道 设置到R层
-        for  index  in  range(numVertex.count):
-            s.SetVertColor(index+1, rt.Point4( (1.0- (colorarry[index].r) / 255.0 ) , 0, 0, 1) )
-        paintmod02.ApplyPaintState(target_obj,s)
+        paintmod02.layerMode ='Subtract'
+
+        for  index  in  range(numVertex):
+            s.SetRawColor(index+1, rt.Point4( (1.0 - colorarry[index].r / 255.0 ) , 0, 0, 1) )
+        paintmod02.ApplyPaintState(target_obj, s)
 
         # ------------------G层设置------------------------
         # 设置绘制状态为G层
@@ -193,8 +217,8 @@ class VertexPaintWindow(QDockWidget):
         s = paintmod03.AcquirePaintState(target_obj)
         paintmod03.layerMode = 'Subtract'
         # 将原来的 R通道 设置到R层
-        for index in range(numVertex.count):
-            s.SetVertColor(index + 1, rt.Point4(0, (1.0 - (colorarry[index].g) / 255.0), 0, 1))
+        for index in range(numVertex):
+            s.SetRawColor(index + 1, rt.Point4(0, (1.0 - (colorarry[index].g) / 255.0), 0, 1))
         paintmod03.ApplyPaintState(target_obj, s)
 
 
@@ -204,8 +228,8 @@ class VertexPaintWindow(QDockWidget):
         s = paintmod04.AcquirePaintState(target_obj)
         paintmod04.layerMode = 'Subtract'
         # 将原来的 R通道 设置到R层
-        for index in range(numVertex.count):
-            s.SetVertColor(index + 1, rt.Point4(0, 0, (1.0 - (colorarry[index].b) / 255.0), 1))
+        for index in range(numVertex):
+            s.SetRawColor(index + 1, rt.Point4(0, 0, (1.0 - (colorarry[index].b) / 255.0), 1))
         paintmod04.ApplyPaintState(target_obj, s)
 
     def enable_channle_shader(self):
@@ -241,11 +265,79 @@ class VertexPaintWindow(QDockWidget):
                 a.paintColor = rt.color(0,0,0)
 
             if (self.radio25.isChecked() == True):
-                a.paintColor = rt.color(25, 0, 0)
+                a.paintColor = rt.color(63.75, 0, 0)
+
+            if (self.radio50.isChecked() == True):
+                a.paintColor = rt.color(127.5, 0, 0)
+
+            if (self.radio75.isChecked() == True):
+                a.paintColor = rt.color(191.25, 0, 0)
+
+            if (self.radio100.isChecked() == True):
+                a.paintColor = rt.color(255, 0, 0)
+
+
+        if(self.radio_G.isChecked() == True):
+            if(self.radio0.isChecked() == True):
+                a.paintColor = rt.color(0,0,0)
+
+            if (self.radio25.isChecked() == True):
+                a.paintColor = rt.color(0, 63.75, 0)
+
+            if (self.radio50.isChecked() == True):
+                a.paintColor = rt.color(0, 127.5, 0)
+
+            if (self.radio75.isChecked() == True):
+                a.paintColor = rt.color(0, 191.25, 0)
+
+            if (self.radio100.isChecked() == True):
+                a.paintColor = rt.color(0, 255, 0)
+
+
+        if(self.radio_B.isChecked() == True):
+            if(self.radio0.isChecked() == True):
+                a.paintColor = rt.color(0,0,0)
+
+            if (self.radio25.isChecked() == True):
+                a.paintColor = rt.color(0, 0, 63.75)
+
+            if (self.radio50.isChecked() == True):
+                a.paintColor = rt.color(0, 0, 127.5)
+
+            if (self.radio75.isChecked() == True):
+                a.paintColor = rt.color(0, 0, 191.25)
+
+            if (self.radio100.isChecked() == True):
+                a.paintColor = rt.color(0, 0, 255)
+
+
 
 
 
         print("sdsss")
+
+    def addlayer(self):
+        if(self.radio_R.isChecked() == True):
+            self.radd = rt.PaintLayerMod()
+            self.radd.name = "R_add"
+            self.radd.layerMode = 'Add'
+            rt.addModifier(self.target_paint, self.radd)
+
+
+        if (self.radio_G.isChecked() == True):
+            self.gadd = rt.PaintLayerMod()
+            self.gadd.name = "G_add"
+            self.gadd.layerMode = 'Add'
+            rt.addModifier(self.target_paint, self.gadd)
+
+        if (self.radio_B.isChecked() == True):
+            self.badd = rt.PaintLayerMod()
+            self.badd.name = "B_add"
+            self.badd.layerMode = 'Add'
+            rt.addModifier(self.target_paint, self.badd)
+
+
+
 
 #代码真正运行的内容 从下面开始
 if __name__ == '__main__':
