@@ -81,6 +81,17 @@ class VertexPaintWindow(QDockWidget):
         self.button_addlayer = self.ui.findChild(QPushButton,"pushButton_8")
         self.button_subtractlayer = self.ui.findChild(QPushButton, "pushButton_9")
 
+        self.slider_brushsize =self.ui.findChild(QSlider,"horizontalSlider")
+
+        self.label_currentObj = self.ui.findChild(QLabel,"label")
+
+        self.radio_none = self.ui.findChild(QRadioButton,"radioButton_11")
+        self.radio_vertex = self.ui.findChild(QRadioButton, "radioButton_12")
+        self.radio_face = self.ui.findChild(QRadioButton, "radioButton_13")
+
+    '''
+    链接信号与槽
+    '''
     def create_connect(self):
         self.button_vertexFromDataTomodifty.clicked.connect(self.vertexFromDataTomodifty)
         self.button_addVertexPaint.clicked.connect(self.addVertexPaint)
@@ -91,12 +102,31 @@ class VertexPaintWindow(QDockWidget):
         self.button_enable_channle_shader.clicked.connect(self.enable_channle_shader)
         self.button_applayPaint.clicked.connect(self.applayVertexPaint)
 
-        self.button_setPaintMode.clicked.connect(self.set_PaintMode)
-        self.button_setPaintMode_easer.clicked.connect(self.set_PaintMode_easer)
+        # lambda:表达式 可以进行 槽函数传参
+        self.button_setPaintMode.clicked.connect(lambda: self.set_PaintMode(1))
+        self.button_setPaintMode_easer.clicked.connect(lambda: self.set_PaintMode(2))
 
         self.button_addlayer.clicked.connect(self.addlayer)
-        # self.button_subtractlayer.clicked.connect()
+        self.button_subtractlayer.clicked.connect(self.subtractlayer)
 
+        self.slider_brushsize.valueChanged.connect(self.brushsize)
+
+        self.radio_none.toggled.connect(lambda: self.changePaintMode(0))
+        self.radio_vertex.toggled.connect(lambda: self.changePaintMode(1))
+        self.radio_face.toggled.connect(lambda: self.changePaintMode(2))
+
+    '''
+    初始化成员变量参数
+    '''
+    def creatAttribute(self):
+        # 当前绘画scence对象
+        self.target_paint;
+
+
+    '''
+    addVertexPaint
+    拾取对象，为对象创建一个基础的绘画层，并设置RGB通道的默认值
+    '''
     def addVertexPaint(self):
         self.target_paint = rt.selection[0]
         self.Base = rt.PaintLayerMod()
@@ -120,12 +150,22 @@ class VertexPaintWindow(QDockWidget):
         self.Base.ApplyPaintState(self.target_paint, s)
 
 
+    '''
+    applayVertexPaint
+    为当前对象塌陷掉所有的绘画修改器
+    '''
     def applayVertexPaint(self):
         rt.convertTopoly(rt.selection[0])
 
+
+    '''
+    Set_channel
+    设置当前工作通道，笔刷通道颜色，显示通道，工作层 会随着 当前工作通道 改变
+    '''
     def Set_channel(self):
         a = rt.VertexPaintTool()
-        graycolor = [0,25,50,75,100]
+        x = rt.selection[0]
+        self.m =  x.material
         if(self.radio_R.isChecked() == True):
             self.m.k_test = 1.0
             a.paintColor  = rt.color(255,0,0)
@@ -142,6 +182,11 @@ class VertexPaintWindow(QDockWidget):
 
         rt.redrawViews()
 
+
+    '''
+    vertexFromDataTomodifty
+    从当前已塌陷的模型中重建顶点绘画层
+    '''
     def vertexFromDataTomodifty(self):
         #获取场景对象
         target_obj = rt.selection[0]
@@ -232,6 +277,11 @@ class VertexPaintWindow(QDockWidget):
             s.SetRawColor(index + 1, rt.Point4(0, 0, (1.0 - (colorarry[index].b) / 255.0), 1))
         paintmod04.ApplyPaintState(target_obj, s)
 
+
+    '''
+    enable_channle_shader
+    赋予临时通道材质
+    '''
     def enable_channle_shader(self):
         self.vertexPaint_targetobj = rt.selection
         self.m = rt.DXmaterial()
@@ -240,24 +290,38 @@ class VertexPaintWindow(QDockWidget):
         for x in self.vertexPaint_targetobj:
             x.material = self.m
 
+
+    '''
+    closeRGB
+    关闭单通道显示
+    '''
     def closeRGB(self):
         self.m.k_test = 0.0
         rt.redrawViews()
 
-    def set_PaintMode(self):
-        a = rt.VertexPaintTool()
 
-        a.curPaintMode = 1
+    '''
+    切换画笔和橡皮
+    '''
+    def set_PaintMode(self,value):
+        currentobj = rt.selection[0]
+        self.label_currentObj.setText('当前工作场景对象:   ' + currentobj.name)
+        if(value == 1):
+            a = rt.VertexPaintTool()
+
+            a.curPaintMode = 1
+
+        if(value == 2):
+            a = rt.VertexPaintTool()
+
+            a.curPaintMode = 2
 
         rt.redrawViews()
 
-    def set_PaintMode_easer(self):
-        a = rt.VertexPaintTool()
 
-        a.curPaintMode = 2
-
-        rt.redrawViews()
-
+    '''
+    设置笔刷颜色灰度值
+    '''
     def Set_Color_gray(self):
         a = rt.VertexPaintTool()
         if(self.radio_R.isChecked() == True):
@@ -316,26 +380,105 @@ class VertexPaintWindow(QDockWidget):
 
         print("sdsss")
 
+
+    '''
+    add层
+    '''
     def addlayer(self):
+        current = rt.selection[0]
+
         if(self.radio_R.isChecked() == True):
-            self.radd = rt.PaintLayerMod()
-            self.radd.name = "R_add"
-            self.radd.layerMode = 'Add'
-            rt.addModifier(self.target_paint, self.radd)
+            if(current.modifiers["R_add"] == None):
+                self.radd = rt.PaintLayerMod()
+                self.radd.name = "R_add"
+                self.radd.layerMode = 'Add'
+                rt.addModifier(current, self.radd)
+            else:
+                print("GADD 已经存在")
+                rt.modPanel.setCurrentObject(current.modifiers["R_add"])
+
 
 
         if (self.radio_G.isChecked() == True):
-            self.gadd = rt.PaintLayerMod()
-            self.gadd.name = "G_add"
-            self.gadd.layerMode = 'Add'
-            rt.addModifier(self.target_paint, self.gadd)
+            if (current.modifiers["G_add"] == None):
+                self.gadd = rt.PaintLayerMod()
+                self.gadd.name = "G_add"
+                self.gadd.layerMode = 'Add'
+                rt.addModifier(current, self.gadd)
+            else:
+                rt.modPanel.setCurrentObject(current.modifiers["G_add"])
+
+
 
         if (self.radio_B.isChecked() == True):
-            self.badd = rt.PaintLayerMod()
-            self.badd.name = "B_add"
-            self.badd.layerMode = 'Add'
-            rt.addModifier(self.target_paint, self.badd)
+            if (current.modifiers["B_add"] == None):
+                self.badd = rt.PaintLayerMod()
+                self.badd.name = "B_add"
+                self.badd.layerMode = 'Add'
+                rt.addModifier(current, self.badd)
+            else:
+                rt.modPanel.setCurrentObject(current.modifiers["G_add"])
+        # modArray = current.modifiers["G_add"]
 
+    '''
+    subtract层
+    '''
+    def subtractlayer(self):
+        current = rt.selection[0]
+        if(self.radio_R.isChecked() == True):
+            if (current.modifiers["R_Subtract"] == None):
+                self.rSubtract = rt.PaintLayerMod()
+                self.rSubtract.name = "R_Subtract"
+                self.rSubtract.layerMode = 'Subtract'
+                rt.addModifier(current, self.rSubtract)
+            else:
+                rt.modPanel.setCurrentObject(current.modifiers["R_Subtract"])
+
+
+        if (self.radio_G.isChecked() == True):
+            if (current.modifiers["G_Subtract"] == None):
+                self.gSubtract = rt.PaintLayerMod()
+                self.gSubtract.name = "G_Subtract"
+                self.gSubtract.layerMode = 'Subtract'
+                rt.addModifier(current, self.gSubtract)
+            else:
+                rt.modPanel.setCurrentObject(current.modifiers["G_Subtract"])
+
+        if (self.radio_B.isChecked() == True):
+            if (current.modifiers["B_Subtract"] == None):
+                self.bSubtract = rt.PaintLayerMod()
+                self.bSubtract.name = "B_Subtract"
+                self.bSubtract.layerMode = 'Subtract'
+                rt.addModifier(current, self.bSubtract)
+            else:
+                rt.modPanel.setCurrentObject(current.modifiers["B_Subtract"])
+
+
+    '''
+    滑块控制笔刷大小
+    '''
+    def brushsize(self):
+        a = rt.VertexPaintTool()
+        a.brushSize = self.slider_brushsize.value()
+
+    '''
+    修改绘画分配模式
+    '''
+    def changePaintMode(self, value):
+        if (value == 0):
+            a = rt.VertexPaintTool()
+            a.curPaintMode = 0
+            rt.execute('subobjectLevel = 0')
+
+        if (value == 1):
+            a = rt.VertexPaintTool()
+            a.curPaintMode = 0
+            rt.execute('subobjectLevel = 1')
+
+        if (value == 2):
+            a = rt.VertexPaintTool()
+            a.curPaintMode = 0
+            rt.execute('subobjectLevel = 2')
 
 
 
