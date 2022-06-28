@@ -2,8 +2,8 @@ macroscript VertexPainterTool
 category: "DamMaxTools"
 tooltip: "VertexPainterTool"
 buttontext: "VertexPainterTool"
-icon: #("AutoGrid",1)
+icon: #("AutoGrid",3)
 
 (
-	python.ExecuteFile @"C:\DamMaxTools\NormalTools\main.py"
+	python.ExecuteFile @"C:\DamMaxTools\MaxTool_VertexPaint\main.py"
 )

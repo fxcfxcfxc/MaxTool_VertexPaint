@@ -33,7 +33,7 @@ class VertexPaintWindow(QDockWidget):
         self.create_widget()
         self.create_connect()
 
-        self.resize(550, 650)
+        self.resize(470, 670)
 
 
     def create_widget(self):
@@ -417,7 +417,7 @@ class VertexPaintWindow(QDockWidget):
                 self.badd.layerMode = 'Add'
                 rt.addModifier(current, self.badd)
             else:
-                rt.modPanel.setCurrentObject(current.modifiers["G_add"])
+                rt.modPanel.setCurrentObject(current.modifiers["B_add"])
         # modArray = current.modifiers["G_add"]
 
     '''
