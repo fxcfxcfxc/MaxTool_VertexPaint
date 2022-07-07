@@ -32,7 +32,7 @@ class VertexPaintWindow(QDockWidget):
 
         self.create_widget()
         self.create_connect()
-
+        self.creatAttribute()
         self.resize(470, 670)
 
 
@@ -120,7 +120,8 @@ class VertexPaintWindow(QDockWidget):
     '''
     def creatAttribute(self):
         # 当前绘画scence对象
-        self.target_paint;
+        self.target_paint = None
+        self.brush_gray_value = 255
 
 
     '''
@@ -168,13 +169,13 @@ class VertexPaintWindow(QDockWidget):
         self.m =  x.material
         if(self.radio_R.isChecked() == True):
             self.m.k_test = 1.0
-            a.paintColor  = rt.color(255,0,0)
+            a.paintColor  = rt.color(self.brush_gray_value,0,0)
         if(self.radio_G.isChecked() == True):
             self.m.k_test = 2.0
-            a.paintColor = rt.color(0,255,0)
+            a.paintColor = rt.color(0,self.brush_gray_value,0)
         if(self.radio_B.isChecked() == True):
             self.m.k_test = 3.0
-            a.paintColor = rt.color(0,0,255)
+            a.paintColor = rt.color(0,0,self.brush_gray_value)
         if(self.radio_A.isChecked() == True):
             self.m.k_test = 4.0
         if(self.radio_RGB.isChecked() == True):
@@ -323,56 +324,72 @@ class VertexPaintWindow(QDockWidget):
     设置笔刷颜色灰度值
     '''
     def Set_Color_gray(self):
+        self.brush_gray_value;
         a = rt.VertexPaintTool()
         if(self.radio_R.isChecked() == True):
             if(self.radio0.isChecked() == True):
-                a.paintColor = rt.color(0,0,0)
+                self.brush_gray_value=0
+                a.paintColor = rt.color(self.brush_gray_value,0,0)
 
             if (self.radio25.isChecked() == True):
-                a.paintColor = rt.color(63.75, 0, 0)
+                self.brush_gray_value = 63.75
+                a.paintColor = rt.color(self.brush_gray_value, 0, 0)
 
             if (self.radio50.isChecked() == True):
-                a.paintColor = rt.color(127.5, 0, 0)
+                self.brush_gray_value = 127.5
+                a.paintColor = rt.color(self.brush_gray_value, 0, 0)
 
             if (self.radio75.isChecked() == True):
-                a.paintColor = rt.color(191.25, 0, 0)
+                self.brush_gray_value = 191.25
+                a.paintColor = rt.color(self.brush_gray_value, 0, 0)
 
             if (self.radio100.isChecked() == True):
-                a.paintColor = rt.color(255, 0, 0)
+
+                a.paintColor = rt.color(self.brush_gray_value, 0, 0)
 
 
         if(self.radio_G.isChecked() == True):
             if(self.radio0.isChecked() == True):
-                a.paintColor = rt.color(0,0,0)
+                self.brush_gray_value = 0
+                a.paintColor = rt.color(0,self.brush_gray_value,0)
 
             if (self.radio25.isChecked() == True):
-                a.paintColor = rt.color(0, 63.75, 0)
+                self.brush_gray_value = 63.75
+                a.paintColor = rt.color(0, self.brush_gray_value, 0)
 
             if (self.radio50.isChecked() == True):
-                a.paintColor = rt.color(0, 127.5, 0)
+                self.brush_gray_value = 127.5
+                a.paintColor = rt.color(0, self.brush_gray_value, 0)
 
             if (self.radio75.isChecked() == True):
-                a.paintColor = rt.color(0, 191.25, 0)
+                self.brush_gray_value = 191.25
+                a.paintColor = rt.color(0,self.brush_gray_value, 0)
 
             if (self.radio100.isChecked() == True):
-                a.paintColor = rt.color(0, 255, 0)
+                self.brush_gray_value = 255
+                a.paintColor = rt.color(0,self.brush_gray_value, 0)
 
 
         if(self.radio_B.isChecked() == True):
             if(self.radio0.isChecked() == True):
-                a.paintColor = rt.color(0,0,0)
+                self.brush_gray_value = 0
+                a.paintColor = rt.color(0,0,self.brush_gray_value)
 
             if (self.radio25.isChecked() == True):
-                a.paintColor = rt.color(0, 0, 63.75)
+                self.brush_gray_value = 63.75
+                a.paintColor = rt.color(0, 0, self.brush_gray_value)
 
             if (self.radio50.isChecked() == True):
-                a.paintColor = rt.color(0, 0, 127.5)
+                self.brush_gray_value = 127.5
+                a.paintColor = rt.color(0, 0, self.brush_gray_value)
 
             if (self.radio75.isChecked() == True):
-                a.paintColor = rt.color(0, 0, 191.25)
+                self.brush_gray_value = 191.25
+                a.paintColor = rt.color(0, 0,self.brush_gray_value)
 
             if (self.radio100.isChecked() == True):
-                a.paintColor = rt.color(0, 0, 255)
+                self.brush_gray_value = 255
+                a.paintColor = rt.color(0, 0,self.brush_gray_value)
 
 
 

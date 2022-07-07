@@ -75,7 +75,7 @@
       <item row="1" column="0">
        <widget class="QPushButton" name="pushButton_7">
         <property name="text">
-         <string>新建通道显示材质</string>
+         <string>新建显示材质</string>
         </property>
        </widget>
       </item>
@@ -234,7 +234,7 @@
       <item>
        <widget class="QSlider" name="horizontalSlider">
         <property name="maximum">
-         <number>60</number>
+         <number>40</number>
         </property>
         <property name="value">
          <number>20</number>
@@ -250,7 +250,7 @@
    <item>
     <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
-      <string>灰度值</string>
+      <string>灰度值比</string>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
