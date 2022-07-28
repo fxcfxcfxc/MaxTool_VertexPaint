@@ -344,7 +344,7 @@ class VertexPaintWindow(QDockWidget):
                 a.paintColor = rt.color(self.brush_gray_value, 0, 0)
 
             if (self.radio100.isChecked() == True):
-
+                self.brush_gray_value = 255
                 a.paintColor = rt.color(self.brush_gray_value, 0, 0)
 
 
